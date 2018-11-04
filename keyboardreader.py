@@ -1,6 +1,8 @@
 import pynput
 from pynput import keyboard
 import time
+import math
+import numpy as np
 
 vector = []
 # Dinamic dictionary - safety double click
@@ -11,6 +13,9 @@ hold_time = []
 between_time = []
 last_time = 0
 count = 0
+count_stud = [1, 1, 3.07, 1.88, 1.63, 1.53, 1.47, 1.43, 1.41, 1.39,
+             1.38, 1.37, 1.36, 1.36, 1.35, 1.35, 1.34, 1.34,
+             1.33, 1.33, 1.33]
 def on_press(key):
     try:
         global count
@@ -43,7 +48,28 @@ def on_release(key):
         # Stop listener
         return False
 
-def reset():
+def count_model(vector):
+    hold = []
+    between = []
+    v_size = len(vector)
+    for i in vector:
+        hold.append(i[0])
+        print(i[0])
+    for i in vector:
+        between.append(i[1])
+    h_mean = np.mean(hold, axis = 0)
+    b_mean = np.mean(between, axis = 0)
+    h_var = np.var(hold, ddof = 1, axis = 0)
+    b_var = np.var(between, ddof = 1, axis = 0)
+    print(h_mean)
+    print(b_mean)
+    h_min = h_mean - count_stud[v_size]*h_var
+    h_max = h_mean + count_stud[v_size]*h_var
+    b_min = b_mean - count_stud[v_size]*b_var
+    b_max = b_mean + count_stud[v_size]*b_var
+    return [[h_min, h_max], [b_min, b_max]]
+
+def init():
     global count, last_time
     time_on_press.clear()
     hold_time.clear()
@@ -52,16 +78,22 @@ def reset():
     count = 0
 
 def main():
-    while True:
+    count = 0
+    while (count != 3):
         with keyboard.Listener(on_press = on_press, on_release = on_release) as listener:
             print("Type your keyword: ")
             keyword = input()
+            if(keyboard.Key ==keyboard.Key.esc):
+                break
             listener.join()
-        vector.append([hold_time, between_time])
-        print("Hold time: ", hold_time)
-        print("Time between: ", between_time)
-        print("Vector size: ", len(vector))
+        vector.append([np.array(hold_time), np.array(between_time)])
+        #print("Hold time: ", hold_time)
+        #print("Time between: ", between_time)
+        #print(np.array(between_time))
         # Reset lists
-        reset()
+        count += 1
+        init()
+    res = count_model(vector)
+    print(res)
 if __name__ == "__main__":
     main()
