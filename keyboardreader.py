@@ -3,7 +3,7 @@ from pynput import keyboard
 import time
 import math
 import numpy as np
-
+from statistics import variance
 vector = []
 # Dinamic dictionary - safety double click
 time_on_press = {}
@@ -34,10 +34,10 @@ def on_release(key):
     if (key != keyboard.Key.enter):
         time_now = time.clock()
         # Hold time (little delay)
-        hold_time.append(time_now - time_on_press[key])
+        hold_time.append(round((time_now - time_on_press[key]), 6))
         # Calculate between_time (skip first click)
         if(count > 0):
-            between_time.append(time_now - last_time - (hold_time[count-1] + hold_time[count]))
+            between_time.append(round((time_now - last_time - (hold_time[count-1] + hold_time[count])),6))
             #print('between time is', between_time[count - 1])
         #print('{0} released'.format(key))
         #print('hold time is', hold_time[count])
@@ -59,14 +59,14 @@ def count_model(vector):
         between.append(i[1])
     h_mean = np.mean(hold, axis = 0)
     b_mean = np.mean(between, axis = 0)
-    h_var = np.var(hold, ddof = 1, axis = 0)
-    b_var = np.var(between, ddof = 1, axis = 0)
+    h_var = np.var(hold, ddof = 0, axis = 0)
+    b_var = np.var(between, ddof = 0, axis = 0)
     print(h_mean)
-    print(b_mean)
-    h_min = h_mean - count_stud[v_size]*h_var
-    h_max = h_mean + count_stud[v_size]*h_var
-    b_min = b_mean - count_stud[v_size]*b_var
-    b_max = b_mean + count_stud[v_size]*b_var
+    print(h_var)
+    h_min = h_mean - count_stud[v_size]*np.sqrt(h_var)
+    h_max = h_mean + count_stud[v_size]*np.sqrt(h_var)
+    b_min = b_mean - count_stud[v_size]*np.sqrt(b_var)
+    b_max = b_mean + count_stud[v_size]*np.sqrt(b_var)
     return [[h_min, h_max], [b_min, b_max]]
 
 def init():
