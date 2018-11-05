@@ -4,6 +4,11 @@ import time
 import math
 import numpy as np
 from statistics import variance
+import sqlite3
+
+conn = sqlite3.connect('model.db')
+c = conn.cursor()
+
 vector = []
 # Dinamic dictionary - safety double click
 time_on_press = {}
@@ -69,7 +74,7 @@ def count_model(vector):
     b_max = b_mean + count_stud[v_size]*np.sqrt(b_var)
     return [[h_min, h_max], [b_min, b_max]]
 
-def init():
+def val_reset():
     global count, last_time
     time_on_press.clear()
     hold_time.clear()
@@ -77,11 +82,27 @@ def init():
     last_time = 0
     count = 0
 
+def create_table():
+    c.execute("CREATE TABLE IF NOT EXISTS model(name TEXT, type TEXT,'1' REAL, '2' REAL, '3' REAL, '4' REAL, '5' REAL, '6' REAL)")
+
+def data_entry(name, v):
+    c.execute("INSERT INTO model (name, type, '1', '2', '3', '4', '5', '6') VALUES (?,?,?,?,?,?,?,?)",
+                (name, 'h_min', v[0][0][0], v[0][0][1], v[0][0][2], v[0][0][3],v[0][0][4], v[0][0][5]))
+    c.execute("INSERT INTO model (name, type, '1', '2', '3','4', '5', '6') VALUES (?,?,?,?,?,?,?,?)",
+                (name, 'h_max', v[0][1][0], v[0][1][1], v[0][1][2], v[0][1][3],v[0][1][4], v[0][1][5]))
+    c.execute("INSERT INTO model (name, type, '1', '2', '3','4', '5') VALUES (?,?,?,?,?,?,?)",
+                (name, 'b_min', v[1][0][0], v[1][0][1], v[1][0][2], v[1][0][3],v[1][0][4]))
+    c.execute("INSERT INTO model (name, type, '1', '2', '3','4', '5') VALUES (?,?,?,?,?,?,?)",
+                (name, 'b_max', v[1][1][0], v[1][1][1], v[1][1][2], v[1][1][3],v[1][1][4]))
+    conn.commit()
+
 def main():
     count = 0
+    print("Type your name: ")
+    name = input()
     while (count != 3):
         with keyboard.Listener(on_press = on_press, on_release = on_release) as listener:
-            print("Type your keyword: ")
+            print("Type your keyword(6 letters): ")
             keyword = input()
             if(keyboard.Key ==keyboard.Key.esc):
                 break
@@ -92,8 +113,12 @@ def main():
         #print(np.array(between_time))
         # Reset lists
         count += 1
-        init()
+        val_reset()
     res = count_model(vector)
     print(res)
+    create_table()
+    data_entry(name, res)
+    c.close()
+    conn.close()
 if __name__ == "__main__":
     main()
