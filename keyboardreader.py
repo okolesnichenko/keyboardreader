@@ -9,12 +9,9 @@ import sqlite3
 conn = sqlite3.connect('model.db')
 c = conn.cursor()
 
-vector = []
-# Dinamic dictionary - safety double click
-time_on_press = {}
-# Key hold time (list)
-hold_time = []
-# Time between clicks (dict)
+vector = []             # Dinamic dictionary - safety double click
+time_on_press = {}      # Key hold time (list)
+hold_time = []          # Time between clicks (dict)
 between_time = []
 last_time = 0
 count = 0
@@ -25,12 +22,10 @@ def on_press(key):
     try:
         global count
         if (key != keyboard.Key.enter):
-            # Check time here
-            time_on_press[key] = time.clock()
+            time_on_press[key] = time.clock()       # Check time here
             #print('key {0} pressed'.format(key.char))
-        elif (count != 0) & (key == keyboard.Key.enter):
-            # Stop listener
-            return False
+        elif (count != 0) & (key == keyboard.Key.enter):    
+            return False                            # Stop listener
     except AttributeError:
         print('special key {0} pressed'.format(key))
 
@@ -46,12 +41,10 @@ def on_release(key):
             #print('between time is', between_time[count - 1])
         #print('{0} released'.format(key))
         #print('hold time is', hold_time[count])
-        # last_time for calculate between_time
-        last_time = time.clock()
+        last_time = time.clock()        # last_time for calculate between_time
         count += 1
     elif (count != 0) & (key == keyboard.Key.enter):
-        # Stop listener
-        return False
+        return False                # Stop listener
 
 def count_model(vector):
     hold = []
@@ -64,8 +57,8 @@ def count_model(vector):
         between.append(i[1])
     h_mean = np.mean(hold, axis = 0)
     b_mean = np.mean(between, axis = 0)
-    h_var = np.var(hold, ddof = 1, axis = 0)
-    b_var = np.var(between, ddof = 1, axis = 0)
+    h_var = np.var(hold, ddof = 0, axis = 0)
+    b_var = np.var(between, ddof = 0, axis = 0)
     print(h_mean)
     print(h_var)
     h_min = h_mean - count_stud[v_size]*np.sqrt(h_var)
@@ -83,42 +76,73 @@ def val_reset():
     count = 0
 
 def create_table():
-    c.execute("CREATE TABLE IF NOT EXISTS model(name TEXT, type TEXT,'1' REAL, '2' REAL, '3' REAL, '4' REAL, '5' REAL, '6' REAL)")
+    c.execute("CREATE TABLE IF NOT EXISTS model(name TEXT, password TEXT, type TEXT,'1' REAL, '2' REAL, '3' REAL, '4' REAL, '5' REAL, '6' REAL, '7' REAL, '8' REAL)")
 
-def data_entry(name, v):
-    c.execute("INSERT INTO model (name, type, '1', '2', '3', '4', '5', '6') VALUES (?,?,?,?,?,?,?,?)",
-                (name, 'h_min', v[0][0][0], v[0][0][1], v[0][0][2], v[0][0][3],v[0][0][4], v[0][0][5]))
-    c.execute("INSERT INTO model (name, type, '1', '2', '3','4', '5', '6') VALUES (?,?,?,?,?,?,?,?)",
-                (name, 'h_max', v[0][1][0], v[0][1][1], v[0][1][2], v[0][1][3],v[0][1][4], v[0][1][5]))
-    c.execute("INSERT INTO model (name, type, '1', '2', '3','4', '5') VALUES (?,?,?,?,?,?,?)",
-                (name, 'b_min', v[1][0][0], v[1][0][1], v[1][0][2], v[1][0][3],v[1][0][4]))
-    c.execute("INSERT INTO model (name, type, '1', '2', '3','4', '5') VALUES (?,?,?,?,?,?,?)",
-                (name, 'b_max', v[1][1][0], v[1][1][1], v[1][1][2], v[1][1][3],v[1][1][4]))
+def data_entry(name, password, v):
+    c.execute("INSERT INTO model (name, password, type, '1', '2', '3', '4', '5', '6') VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (name, password, 'h_min', v[0][0][0], v[0][0][1], v[0][0][2], v[0][0][3], v[0][0][4], v[0][0][5], v[0][0][6], v[0][0][7]))
+    c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5', '6') VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (name, password, 'h_max', v[0][1][0], v[0][1][1], v[0][1][2], v[0][1][3], v[0][1][4], v[0][1][5], v[0][1][6], v[0][1][7]))
+    c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5') VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (name, password,'b_min', v[1][0][0], v[1][0][1], v[1][0][2], v[1][0][3], v[1][0][4], v[1][0][5], v[1][0][6]))
+    c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5') VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (name, password, 'b_max', v[1][1][0], v[1][1][1], v[1][1][2], v[1][1][3], v[1][1][4], v[1][1][5], v[1][1][6]))
     conn.commit()
 
-def main():
-    count = 0
+def check_in():
     print("Type your name: ")
     name = input()
+    count = 0
     while (count != 3):
-        with keyboard.Listener(on_press = on_press, on_release = on_release) as listener:
-            print("Type your keyword(6 letters): ")
-            keyword = input()
-            if(keyboard.Key ==keyboard.Key.esc):
-                break
-            listener.join()
-        vector.append([np.array(hold_time), np.array(between_time)])
-        #print("Hold time: ", hold_time)
-        #print("Time between: ", between_time)
-        #print(np.array(between_time))
-        # Reset lists
+        features, password = create_vector()
+        vector.append(features)
         count += 1
-        val_reset()
-    res = count_model(vector)
-    print(res)
+    model = count_model(vector)         # Create model
+    print(model)
     create_table()
-    data_entry(name, res)
-    c.close()
-    conn.close()
+    data_entry(name, password, model)   # Create record in DataBase
+
+def create_vector():
+    with keyboard.Listener(on_press = on_press, on_release = on_release) as listener:
+            print("Type your keyword(6 letters): ")
+            password = input()
+            listener.join()
+    vector = [np.array(hold_time), np.array(between_time)]
+    val_reset()
+    return vector, password
+
+def authentication(username, vector_pass, password):
+    E = []
+    count = 3
+    c.execute('SELECT * FROM model WHERE name = ?', [username])
+    rows = c.fetchall()
+    for i in vector_pass[0]:
+        if(i > rows[0][count]) and (i < rows[1][count]) and (rows[0][2] == 'h_min') and (rows[1][2] == 'h_max'):
+            E[0].append(0)
+        count+=1
+    count = 3
+    for i in vector_pass[1]:
+        if(i > rows[3][count]) and (i < rows[4][count]) and (rows[3][2] == 'b_min') and (rows[4][2] == 'b_max'):
+            E[1].append(0)
+        count+=1
+
+def main():
+    while True:
+        print("Check in (press 1) | Authentication (press 2) | Exit (press 3)")
+        print("Press number:")
+        tmp = input()
+        if(tmp == '1'):
+            check_in()
+        elif (tmp == '2'):
+            print("Type name:")
+            name = input()
+            print("Type password:")
+            vector_pass, password = create_vector()
+            authentication(name, vector_pass, password)
+        else:
+            if(tmp == '3'):
+                c.close()
+                conn.close()
+                break
 if __name__ == "__main__":
     main()
