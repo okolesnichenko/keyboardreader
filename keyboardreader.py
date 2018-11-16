@@ -112,19 +112,29 @@ def create_vector():
     return vector, password
 
 def authentication(username, vector_pass, password):
-    E = []
+    E = [[],[]]
     count = 3
     c.execute('SELECT * FROM model WHERE name = ?', [username])
     rows = c.fetchall()
+    print(vector_pass[0])
+    print(rows[0])
+    print(rows[1])
     for i in vector_pass[0]:
-        if(i > rows[0][count]) and (i < rows[1][count]) and (rows[0][2] == 'h_min') and (rows[1][2] == 'h_max'):
-            E[0].append(0)
-        count+=1
+        if (rows[0][2] == 'h_min') and (rows[1][2] == 'h_max'):
+            if(i > rows[0][count]) and (i < rows[1][count]):
+                E[0].append(0)
+            else:
+                E[0].append(1)
+            count+=1
     count = 3
     for i in vector_pass[1]:
-        if(i > rows[3][count]) and (i < rows[4][count]) and (rows[3][2] == 'b_min') and (rows[4][2] == 'b_max'):
-            E[1].append(0)
-        count+=1
+        if(rows[2][2] == 'b_min') and (rows[3][2] == 'b_max'):
+            if(i > rows[2][count]) and (i < rows[3][count]):
+                E[1].append(0)
+            else:
+                E[1].append(1)
+            count+=1
+    return E
 
 def main():
     while True:
@@ -138,7 +148,7 @@ def main():
             name = input()
             print("Type password:")
             vector_pass, password = create_vector()
-            authentication(name, vector_pass, password)
+            print(authentication(name, vector_pass, password))
         else:
             if(tmp == '3'):
                 c.close()
