@@ -9,9 +9,9 @@ import sqlite3
 conn = sqlite3.connect('model.db')
 c = conn.cursor()
 
-vector = []             # Dinamic dictionary - safety double click
-time_on_press = {}      # Key hold time (list)
-hold_time = []          # Time between clicks (dict)
+vector = []                                         # Dinamic dictionary - safety double click
+time_on_press = {}                                  # Key hold time (list)
+hold_time = []                                      # Time between clicks (dict)
 between_time = []
 last_time = 0
 count = 0
@@ -33,18 +33,17 @@ def on_release(key):
     global count, last_time
     if (key != keyboard.Key.enter):
         time_now = time.clock()
-        # Hold time (little delay)
-        hold_time.append(round((time_now - time_on_press[key]), 6))
+        hold_time.append(round((time_now - time_on_press[key]), 6)) # Hold time (little delay)
         # Calculate between_time (skip first click)
         if(count > 0):
             between_time.append(round((time_now - last_time - (hold_time[count-1] + hold_time[count])),6))
             #print('between time is', between_time[count - 1])
         #print('{0} released'.format(key))
         #print('hold time is', hold_time[count])
-        last_time = time.clock()        # last_time for calculate between_time
+        last_time = time.clock()                    # last_time for calculate between_time
         count += 1
     elif (count != 0) & (key == keyboard.Key.enter):
-        return False                # Stop listener
+        return False                                # Stop listener
 
 def count_model(vector):
     hold = []
@@ -59,8 +58,8 @@ def count_model(vector):
     b_mean = np.mean(between, axis = 0)
     h_var = np.var(hold, ddof = 0, axis = 0)
     b_var = np.var(between, ddof = 0, axis = 0)
-    print(h_mean)
-    print(h_var)
+    #print(h_mean)
+    #print(h_var)
     h_min = h_mean - count_stud[v_size]*np.sqrt(h_var)
     h_max = h_mean + count_stud[v_size]*np.sqrt(h_var)
     b_min = b_mean - count_stud[v_size]*np.sqrt(b_var)
@@ -76,31 +75,51 @@ def val_reset():
     count = 0
 
 def create_table():
-    c.execute("CREATE TABLE IF NOT EXISTS model(name TEXT, password TEXT, type TEXT,'1' REAL, '2' REAL, '3' REAL, '4' REAL, '5' REAL, '6' REAL, '7' REAL, '8' REAL)")
+    c.execute("CREATE TABLE IF NOT EXISTS model(name TEXT, password TEXT, type TEXT, '1' REAL, '2' REAL, '3' REAL, '4' REAL, '5' REAL, '6' REAL, '7' REAL, '8' REAL, '9' REAL, '10' REAL)")
 
 def data_entry(name, password, v):
-    c.execute("INSERT INTO model (name, password, type, '1', '2', '3', '4', '5', '6') VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                (name, password, 'h_min', v[0][0][0], v[0][0][1], v[0][0][2], v[0][0][3], v[0][0][4], v[0][0][5], v[0][0][6], v[0][0][7]))
-    c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5', '6') VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                (name, password, 'h_max', v[0][1][0], v[0][1][1], v[0][1][2], v[0][1][3], v[0][1][4], v[0][1][5], v[0][1][6], v[0][1][7]))
-    c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5') VALUES (?,?,?,?,?,?,?,?,?,?)",
-                (name, password,'b_min', v[1][0][0], v[1][0][1], v[1][0][2], v[1][0][3], v[1][0][4], v[1][0][5], v[1][0][6]))
-    c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5') VALUES (?,?,?,?,?,?,?,?,?,?)",
-                (name, password, 'b_max', v[1][1][0], v[1][1][1], v[1][1][2], v[1][1][3], v[1][1][4], v[1][1][5], v[1][1][6]))
+    types = ['h_min', 'h_max', 'b_min', 'b_max']
+    arr = []
+    for t in types:
+        if (t == 'h_min'): 
+            x = 0; y = 0
+        elif(t == 'h_max'):
+            x = 0; y = 1
+        elif(t == 'b_min'):
+            x = 1; y = 0
+        elif(t == 'b_max'):
+            x = 1; y = 1
+        else:
+            pass
+        arr.append(name)
+        arr.append(password)
+        arr.append(t)
+        arr.extend(v[x][y].tolist())
+        while(len(arr) != 13):
+            arr.append(None)
+        print(arr)
+        c.execute("INSERT INTO model VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", arr)
+        arr.clear()
+    #c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5', '6', '7', '8') VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+    #            (name, password, 'h_max', v[0][1][0], v[0][1][1], v[0][1][2], v[0][1][3], v[0][1][4], v[0][1][5], v[0][1][6], v[0][1][7]))
+    #c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5', '6', '7') VALUES (?,?,?,?,?,?,?,?,?,?)",
+    #            (name, password,'b_min', v[1][0][0], v[1][0][1], v[1][0][2], v[1][0][3], v[1][0][4], v[1][0][5], v[1][0][6]))
+    #c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5', '6', '7') VALUES (?,?,?,?,?,?,?,?,?,?)",
+    #            (name, password, 'b_max', v[1][1][0], v[1][1][1], v[1][1][2], v[1][1][3], v[1][1][4], v[1][1][5], v[1][1][6]))
     conn.commit()
 
 def check_in():
     print("Type your name: ")
     name = input()
     count = 0
-    while (count != 3):
+    while (count != 4):
         features, password = create_vector()
         vector.append(features)
         count += 1
-    model = count_model(vector)         # Create model
-    print(model)
+    model = count_model(vector)                     # Create model
+    #print(model)
     create_table()
-    data_entry(name, password, model)   # Create record in DataBase
+    data_entry(name, password, model)               # Create record in DataBase
 
 def create_vector():
     with keyboard.Listener(on_press = on_press, on_release = on_release) as listener:
@@ -112,10 +131,16 @@ def create_vector():
     return vector, password
 
 def authentication(username, vector_pass, password):
-    E = [[],[]]
+    E = [[],[]]                                     # Hamming vector
     count = 3
     c.execute('SELECT * FROM model WHERE name = ?', [username])
     rows = c.fetchall()
+    if (len(rows) == 0):                            # Check name
+        print("Wrong name!")
+        return None
+    if(rows[0][1] != password):                     # Check password
+        print("Wrong password!")
+        return None
     print(vector_pass[0])
     print(rows[0])
     print(rows[1])
