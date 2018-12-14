@@ -103,6 +103,7 @@ def data_entry(name, password, v):
     conn.commit()
 
 def check_in():
+    E = []
     print("Type your name: ")
     name = input()
     count = 0
@@ -113,6 +114,10 @@ def check_in():
     model = count_model(vector)                     # Create model
     create_table()
     data_entry(name, password, model)               # Create record in DataBase
+    count = 0
+    while(count != 3):
+        E.append(hemming(name, model, password))
+        
     '''
     1)  Добавить цикл из n эпох -> высчитывать вектор хэминга для каждого ввода
     2)  Посчитать тот средий вектор
