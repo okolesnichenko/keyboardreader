@@ -113,6 +113,12 @@ def check_in():
     model = count_model(vector)                     # Create model
     create_table()
     data_entry(name, password, model)               # Create record in DataBase
+    '''
+    1)  Добавить цикл из n эпох -> высчитывать вектор хэминга для каждого ввода
+    2)  Посчитать тот средий вектор
+    3)  Ошибки считать при авторизации, либо при цикле свыше 
+        (сравнивая с вектором хемминга на прошлой интерации)
+    '''
 
 def create_vector():
     with keyboard.Listener(on_press = on_press, on_release = on_release) as listener:
@@ -123,10 +129,7 @@ def create_vector():
     val_reset()
     return vector, password
 
-def hemming(vector_pass):
-    pass
-
-def authentication(username, vector_pass, password):
+def hemming(username, vector_pass, password):
     E = [[],[]]                                     # Hamming vector
     count = 3
     c.execute('SELECT * FROM model WHERE name = ?', [username])
@@ -169,7 +172,7 @@ def main():
             name = input()
             print("Type password:")
             vector_pass, password = create_vector()
-            print(authentication(name, vector_pass, password))
+            print(hemming(name, vector_pass, password))
         else:
             if(tmp == '3'):
                 c.close()
