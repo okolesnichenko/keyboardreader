@@ -100,24 +100,17 @@ def data_entry(name, password, v):
         print(arr)
         c.execute("INSERT INTO model VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", arr)
         arr.clear()
-    #c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5', '6', '7', '8') VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-    #            (name, password, 'h_max', v[0][1][0], v[0][1][1], v[0][1][2], v[0][1][3], v[0][1][4], v[0][1][5], v[0][1][6], v[0][1][7]))
-    #c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5', '6', '7') VALUES (?,?,?,?,?,?,?,?,?,?)",
-    #            (name, password,'b_min', v[1][0][0], v[1][0][1], v[1][0][2], v[1][0][3], v[1][0][4], v[1][0][5], v[1][0][6]))
-    #c.execute("INSERT INTO model (name, password, type, '1', '2', '3','4', '5', '6', '7') VALUES (?,?,?,?,?,?,?,?,?,?)",
-    #            (name, password, 'b_max', v[1][1][0], v[1][1][1], v[1][1][2], v[1][1][3], v[1][1][4], v[1][1][5], v[1][1][6]))
     conn.commit()
 
 def check_in():
     print("Type your name: ")
     name = input()
     count = 0
-    while (count != 4):
+    while (count != 6):
         features, password = create_vector()
         vector.append(features)
         count += 1
     model = count_model(vector)                     # Create model
-    #print(model)
     create_table()
     data_entry(name, password, model)               # Create record in DataBase
 
@@ -129,6 +122,9 @@ def create_vector():
     vector = [np.array(hold_time), np.array(between_time)]
     val_reset()
     return vector, password
+
+def hemming(vector_pass):
+    pass
 
 def authentication(username, vector_pass, password):
     E = [[],[]]                                     # Hamming vector
