@@ -51,15 +51,12 @@ def count_model(vector):
     v_size = len(vector)
     for i in vector:
         hold.append(i[0])
-        print(i[0])
     for i in vector:
         between.append(i[1])
     h_mean = np.mean(hold, axis = 0)
     b_mean = np.mean(between, axis = 0)
     h_var = np.var(hold, ddof = 0, axis = 0)
     b_var = np.var(between, ddof = 0, axis = 0)
-    #print(h_mean)
-    #print(h_var)
     h_min = h_mean - count_stud[v_size]*np.sqrt(h_var)
     h_max = h_mean + count_stud[v_size]*np.sqrt(h_var)
     b_min = b_mean - count_stud[v_size]*np.sqrt(b_var)
@@ -74,10 +71,10 @@ def val_reset():
     last_time = 0
     count = 0
 
-def create_table():
+def create_table_db():
     c.execute("CREATE TABLE IF NOT EXISTS model(name TEXT, password TEXT, type TEXT, '1' REAL, '2' REAL, '3' REAL, '4' REAL, '5' REAL, '6' REAL, '7' REAL, '8' REAL, '9' REAL, '10' REAL)")
 
-def data_entry(name, password, v):
+def data_entry_db(name, password, v):
     types = ['h_min', 'h_max', 'b_min', 'b_max']
     arr = []
     for t in types:
@@ -97,9 +94,19 @@ def data_entry(name, password, v):
         arr.extend(v[x][y].tolist())
         while(len(arr) != 13):
             arr.append(None)
-        print(arr)
         c.execute("INSERT INTO model VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", arr)
         arr.clear()
+    conn.commit()
+
+def hemming_entry_db(name, password, v, E):
+    arr = []
+    arr.append(name)
+    arr.append(password)
+    arr.append('hemming')
+    arr.append(E)
+    while(len(arr) != 13):
+        arr.append(None)
+    c.execute("INSERT INTO model VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", arr)
     conn.commit()
 
 def check_in():
@@ -107,17 +114,22 @@ def check_in():
     print("Type your name: ")
     name = input()
     count = 0
-    while (count != 6):
+    while (count != 3):
         features, password = create_vector()
         vector.append(features)
         count += 1
     model = count_model(vector)                     # Create model
-    create_table()
-    data_entry(name, password, model)               # Create record in DataBase
+    create_table_db()
+    data_entry_db(name, password, model)               # Create record in DataBase
     count = 0
     while(count != 3):
-        E.append(hemming(name, model, password))
-        
+        features, password = create_vector()
+        E.append(hemming_distance(name, features, password))
+        count += 1
+    print(E)
+    limit = np.mean(E, axis = 0) + count_stud[len(E)] * np.var(E, ddof=0, axis=0)
+    hemming_entry_db(name, password, model, limit)
+    
     '''
     1)  Добавить цикл из n эпох -> высчитывать вектор хэминга для каждого ввода
     2)  Посчитать тот средий вектор
@@ -134,9 +146,10 @@ def create_vector():
     val_reset()
     return vector, password
 
-def hemming(username, vector_pass, password):
+def hemming_distance(username, vector_pass, password):
     E = [[],[]]                                     # Hamming vector
-    count = 3
+    distance = 0
+    count = 3                                       # Third record in db
     c.execute('SELECT * FROM model WHERE name = ?', [username])
     rows = c.fetchall()
     if (len(rows) == 0):                            # Check name
@@ -145,25 +158,32 @@ def hemming(username, vector_pass, password):
     if(rows[0][1] != password):                     # Check password
         print("Wrong password!")
         return None
-    print(vector_pass[0])
-    print(rows[0])
-    print(rows[1])
     for i in vector_pass[0]:
         if (rows[0][2] == 'h_min') and (rows[1][2] == 'h_max'):
             if(i > rows[0][count]) and (i < rows[1][count]):
                 E[0].append(0)
             else:
                 E[0].append(1)
+                distance+=1
             count+=1
-    count = 3
+    count = 3                                       # Third record in db
     for i in vector_pass[1]:
         if(rows[2][2] == 'b_min') and (rows[3][2] == 'b_max'):
             if(i > rows[2][count]) and (i < rows[3][count]):
                 E[1].append(0)
             else:
                 E[1].append(1)
+                distance+=1
             count+=1
-    return E
+    return distance
+
+def authentication(username, distance):
+    c.execute('SELECT * FROM model WHERE name = ?', [username])
+    rows = c.fetchall()
+    if(rows[4][3]>distance):
+        print("Access is allowed")
+    else:
+        print("Access is denied")       
 
 def main():
     while True:
@@ -174,10 +194,10 @@ def main():
             check_in()
         elif (tmp == '2'):
             print("Type name:")
-            name = input()
+            username = input()
             print("Type password:")
             vector_pass, password = create_vector()
-            print(hemming(name, vector_pass, password))
+            authentication(username, hemming_distance(username, vector_pass, password))
         else:
             if(tmp == '3'):
                 c.close()
