@@ -198,7 +198,7 @@ def errors(username):
         if(authentication(username, hemming_distance(username, vector_pass, password))):
             allow+=1
         count += 1
-    print("1: ", allow/N, "2: ", 1 - allow/N)
+    print("1: ", 1 - allow/N, "2: ", allow/N)
 
 def main():
     while True:
