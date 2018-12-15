@@ -182,12 +182,27 @@ def authentication(username, distance):
     rows = c.fetchall()
     if(rows[4][3]>distance):
         print("Access is allowed")
+        return True
     else:
-        print("Access is denied")       
+        print("Access is denied")
+        return False
+       
+
+def errors(username):
+    N = 5
+    allow = 0
+    count = 0
+    while(count < N):
+        print("Type password:")
+        vector_pass, password = create_vector()
+        if(authentication(username, hemming_distance(username, vector_pass, password))):
+            allow+=1
+        count += 1
+    print("1: ", allow/N, "2: ", 1 - allow/N)
 
 def main():
     while True:
-        print("Check in (press 1) | Authentication (press 2) | Exit (press 3)")
+        print("Check in (press 1) | Authentication (press 2) | Errors (press 3) | Exit (press 4)")
         print("Press number:")
         tmp = input()
         if(tmp == '1'):
@@ -198,8 +213,12 @@ def main():
             print("Type password:")
             vector_pass, password = create_vector()
             authentication(username, hemming_distance(username, vector_pass, password))
+        elif (tmp == '3'):
+            print("Type name:")
+            username = input()
+            errors(username)
         else:
-            if(tmp == '3'):
+            if(tmp == '4'):
                 c.close()
                 conn.close()
                 break
