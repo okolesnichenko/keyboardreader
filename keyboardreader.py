@@ -121,6 +121,7 @@ def check_in():
     model = count_model(vector)                     # Create model
     create_table_db()
     data_entry_db(name, password, model)               # Create record in DataBase
+    vector.clear()
     count = 0
     while(count != 3):
         features, password = create_vector()
