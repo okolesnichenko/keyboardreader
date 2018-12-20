@@ -126,7 +126,6 @@ def check_in():
         features, password = create_vector()
         E.append(hemming_distance(name, features, password))
         count += 1
-    print(E)
     limit = np.mean(E, axis = 0) + count_stud[len(E)] * np.var(E, ddof=0, axis=0)
     hemming_entry_db(name, password, model, limit)
     
@@ -139,7 +138,7 @@ def check_in():
 
 def create_vector():
     with keyboard.Listener(on_press = on_press, on_release = on_release) as listener:
-            print("Type your keyword(6 letters): ")
+            print("Type your keyword(<13 letters): ")
             password = input()
             listener.join()
     vector = [np.array(hold_time), np.array(between_time)]
@@ -195,8 +194,10 @@ def errors(username):
     while(count < N):
         print("Type password:")
         vector_pass, password = create_vector()
-        if(authentication(username, hemming_distance(username, vector_pass, password))):
-            allow+=1
+        distance = hemming_distance(username, vector_pass, password)
+        if(distance != None):
+            if(authentication(username, distance)):
+                allow+=1
         count += 1
     print("1: ", 1 - allow/N, "2: ", allow/N)
 
@@ -212,7 +213,9 @@ def main():
             username = input()
             print("Type password:")
             vector_pass, password = create_vector()
-            authentication(username, hemming_distance(username, vector_pass, password))
+            distance = hemming_distance(username, vector_pass, password)
+            if(distance != None):
+                authentication(username, hemming_distance(username, vector_pass, password))
         elif (tmp == '3'):
             print("Type name:")
             username = input()
